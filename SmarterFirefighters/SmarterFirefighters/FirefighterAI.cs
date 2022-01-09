@@ -13,6 +13,7 @@ namespace SmarterFirefighters
         {
             // Initialize BuildingManager using <singleton> as in FindBurningTree
             BuildingManager instance = Singleton<BuildingManager>.instance;
+            uint numBuildings = instance.m_buildings.m_size;
             int minx = Mathf.Max((int)((pos.x - maxDistance) / 64f + 135f), 0);
             int minz = Mathf.Max((int)((pos.z - maxDistance) / 64f + 135f), 0);
             int maxx = Mathf.Min((int)((pos.x + maxDistance) / 64f + 135f), 269);
@@ -46,7 +47,7 @@ namespace SmarterFirefighters
                             }
                         }
                         currentBuilding = instance.m_buildings.m_buffer[currentBuilding].m_nextGridBuilding;
-                        if (++num7 >= 49152)
+                        if (++num7 >= numBuildings)
                         {
                             CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
                             break;
