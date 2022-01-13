@@ -12,25 +12,25 @@ namespace SmarterFirefighters.HarmonyPatches
     public static class FireCopterAIPatch
     {
         private delegate void FindFillLocationDelegate(FireCopterAI instance, ushort vehicleID, ref Vehicle data);
-        private static FindFillLocationDelegate FindFillLocation = AccessTools.MethodDelegate<FindFillLocationDelegate>(typeof(FireTruckAI).GetMethod("FindFillLocation", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+        private static FindFillLocationDelegate FindFillLocation = AccessTools.MethodDelegate<FindFillLocationDelegate>(typeof(FireCopterAI).GetMethod("FindFillLocation", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
         private delegate void HelicopterAISimulationStepDelegate(HelicopterAI instance, ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics);
         private static readonly HelicopterAISimulationStepDelegate BaseSimulationStep = AccessTools.MethodDelegate<HelicopterAISimulationStepDelegate>(typeof(HelicopterAI).GetMethod("SimulationStep", BindingFlags.Instance | BindingFlags.Public, null, new Type[] { typeof(ushort), typeof(Vehicle).MakeByRefType(), typeof(Vehicle.Frame).MakeByRefType(), typeof(ushort), typeof(Vehicle).MakeByRefType(), typeof(int) }, new ParameterModifier[] { }), null, false);
         
-        private delegate uint FindBurningTreeDelegate(FireCopterAI instance, int seed, Vector3 pos, float maxDistance, Vector3 priorityPos);
-        private static FindBurningTreeDelegate FindBurningTree = AccessTools.MethodDelegate<FindBurningTreeDelegate>(typeof(FireTruckAI).GetMethod("FindBurningTree", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static), null, false);
+        private delegate uint FindBurningTreeDelegate(int seed, Vector3 pos, float maxDistance, Vector3 priorityPos);
+        private static FindBurningTreeDelegate FindBurningTree = AccessTools.MethodDelegate<FindBurningTreeDelegate>(typeof(FireCopterAI).GetMethod("FindBurningTree", BindingFlags.NonPublic | BindingFlags.Static), null, false);
 
         private delegate bool ExtinguishFire1Delegate(FireCopterAI instance, ushort vehicleID, ref Vehicle data, ushort buildingID, ref Building buildingData);
-        private static ExtinguishFire1Delegate ExtinguishFire1 = AccessTools.MethodDelegate<ExtinguishFire1Delegate>(typeof(FireTruckAI).GetMethod("ExtinguishFire", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(ushort), typeof(Vehicle).MakeByRefType(), typeof(ushort), typeof(Building).MakeByRefType() }, new ParameterModifier[] { }), null, false);
+        private static ExtinguishFire1Delegate ExtinguishFire1 = AccessTools.MethodDelegate<ExtinguishFire1Delegate>(typeof(FireCopterAI).GetMethod("ExtinguishFire", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(ushort), typeof(Vehicle).MakeByRefType(), typeof(ushort), typeof(Building).MakeByRefType() }, new ParameterModifier[] { }), null, false);
 
         private delegate bool ExtinguishFire2Delegate(FireCopterAI instance, ushort vehicleID, ref Vehicle data, uint treeID, ref TreeInstance treeData);
-        private static ExtinguishFire2Delegate ExtinguishFire2 = AccessTools.MethodDelegate<ExtinguishFire2Delegate>(typeof(FireTruckAI).GetMethod("ExtinguishFire", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(ushort), typeof(Vehicle).MakeByRefType(), typeof(uint), typeof(TreeInstance).MakeByRefType() }, new ParameterModifier[] { }), null, false);
+        private static ExtinguishFire2Delegate ExtinguishFire2 = AccessTools.MethodDelegate<ExtinguishFire2Delegate>(typeof(FireCopterAI).GetMethod("ExtinguishFire", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(ushort), typeof(Vehicle).MakeByRefType(), typeof(uint), typeof(TreeInstance).MakeByRefType() }, new ParameterModifier[] { }), null, false);
 
         private delegate void SetTargetDelegate(FireCopterAI instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding);
-        private static SetTargetDelegate SetTarget = AccessTools.MethodDelegate<SetTargetDelegate>(typeof(FireTruckAI).GetMethod("SetTarget", BindingFlags.Instance | BindingFlags.Public), null, false);
+        private static SetTargetDelegate SetTarget = AccessTools.MethodDelegate<SetTargetDelegate>(typeof(FireCopterAI).GetMethod("SetTarget", BindingFlags.Instance | BindingFlags.Public), null, false);
 
         private delegate bool ShouldReturnToSourceDelegate(FireCopterAI instance, ushort vehicleID, ref Vehicle data);
-        private static ShouldReturnToSourceDelegate ShouldReturnToSource = AccessTools.MethodDelegate<ShouldReturnToSourceDelegate>(typeof(FireTruckAI).GetMethod("ShouldReturnToSource", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+        private static ShouldReturnToSourceDelegate ShouldReturnToSource = AccessTools.MethodDelegate<ShouldReturnToSourceDelegate>(typeof(FireCopterAI).GetMethod("ShouldReturnToSource", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
         [HarmonyPatch(typeof(FireCopterAI), "SimulationStep", 
         new Type[] { typeof(ushort), typeof(Vehicle), typeof(Vehicle.Frame), typeof(ushort), typeof(Vehicle), typeof(int) }, 
@@ -54,7 +54,7 @@ namespace SmarterFirefighters.HarmonyPatches
 				    BuildingInfo info = instance.m_buildings.m_buffer[leaderData.m_targetBuilding].Info;
 				    Vector3 position = instance.m_buildings.m_buffer[leaderData.m_targetBuilding].m_position;
 				    float maxDistance = info.m_buildingAI.MaxFireDetectDistance(leaderData.m_targetBuilding, ref instance.m_buildings.m_buffer[leaderData.m_targetBuilding]);
-				    uint num = FindBurningTree(__instance, vehicleID, position, maxDistance, frameData.m_position);
+				    uint num = FindBurningTree(vehicleID, position, maxDistance, frameData.m_position);
 				    if (num != 0)
 				    {
 					    TreeManager instance2 = Singleton<TreeManager>.instance;
@@ -65,7 +65,7 @@ namespace SmarterFirefighters.HarmonyPatches
 						    {
 							    leaderData.m_flags = (leaderData.m_flags & ~Vehicle.Flags.Emergency2) | Vehicle.Flags.Emergency1;
 						    }
-						    if (ExtinguishFire2(__instance, leaderID, ref leaderData, num, ref instance2.m_trees.m_buffer[num]) && FindBurningTree(__instance, vehicleID, position, maxDistance, frameData.m_position) == 0)
+						    if (ExtinguishFire2(__instance, leaderID, ref leaderData, num, ref instance2.m_trees.m_buffer[num]) && FindBurningTree(vehicleID, position, maxDistance, frameData.m_position) == 0)
 						    {
 							    SetTarget(__instance, leaderID, ref leaderData, 0);
 						    }
