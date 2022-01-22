@@ -108,21 +108,7 @@ namespace SmarterFirefighters.HarmonyPatches
 				    }
 			    }
 		    }
-            if ((leaderData.m_flags & Vehicle.Flags.GoingBack) != 0)
-		    {
-			    ushort newTarget = NewFireAI.FindBurningBuilding(vehicleData.GetLastFramePosition(), 500f);
-                if (newTarget != 0)
-                {
-                    // Switch to building extinguishing material if carrying tree extinguishing material
-                    // If this is not done, copter will despawn if targeted at a burning building
-                    if(leaderData.m_transferType == 68)
-                    {
-                        leaderData.m_transferType = 71;
-                    }
-                    SetTarget(__instance, leaderID, ref leaderData, newTarget);
-                }
-		    }
-		    if ((leaderData.m_flags & Vehicle.Flags.GoingBack) == 0)
+		    if ((leaderData.m_flags & Vehicle.Flags.GoingBack) == 0) // is not going back
 		    {
 			    if (ShouldReturnToSource(__instance, leaderID, ref leaderData))
 			    {
@@ -133,16 +119,30 @@ namespace SmarterFirefighters.HarmonyPatches
 				    FindFillLocation(__instance, leaderID, ref leaderData);
 			    }
 		    }
-		    else if (((Singleton<SimulationManager>.instance.m_currentFrameIndex >> 4) & 0xF) == (leaderID & 0xF) && !ShouldReturnToSource(__instance, leaderID, ref leaderData))
-		    {
-			    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
-			    offer.Priority = 3;
-			    offer.Vehicle = leaderID;
-			    offer.Position = frameData.m_position;
-			    offer.Amount = 1;
-			    offer.Active = true;
-			    Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)leaderData.m_transferType, offer);
-		    }
+			else // if going back
+            {
+				ushort newTarget = NewFireAI.FindBurningBuilding(vehicleData.GetLastFramePosition(), 500f);
+                if (newTarget != 0)
+                {
+                    // Switch to building extinguishing material if carrying tree extinguishing material
+                    // If this is not done, copter will despawn if targeted at a burning building
+                    if(leaderData.m_transferType == 68)
+                    {
+                        leaderData.m_transferType = 71;
+                    }
+                    SetTarget(__instance, leaderID, ref leaderData, newTarget);
+                }
+				else if (((Singleton<SimulationManager>.instance.m_currentFrameIndex >> 4) & 0xF) == (leaderID & 0xF) && !ShouldReturnToSource(__instance, leaderID, ref leaderData))
+				{
+					TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+					offer.Priority = 3;
+					offer.Vehicle = leaderID;
+					offer.Position = frameData.m_position;
+					offer.Amount = 1;
+					offer.Active = true;
+					Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)leaderData.m_transferType, offer);
+				}
+            }
             return false;
 	    }
     }

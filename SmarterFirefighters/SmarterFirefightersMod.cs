@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace SmarterFirefighters
 {
-    public class Mod : IUserMod
+    public class SmarterFirefightersMod : IUserMod
     {
         public string Name => "Smarter Firefighters: Improved AI";
         public string Description => "Improves firefighter AI by prioritizing nearby fires to combat fire spread.";
